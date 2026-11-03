@@ -5,13 +5,29 @@ import './App.css'
 
 const START = [0, 0.65, 8]
 const GOAL_Z = -8
-const OBSTACLES = [
-  { z: 5, speed: 1.3, width: 3.2, color: '#ff5c7a' },
-  { z: 1, speed: -1.7, width: 3.8, color: '#ffb84d' },
-  { z: -3, speed: 1.9, width: 3.3, color: '#b66dff' },
-]
 
-function Player({ positionRef, resetSignal }) {
+const LEVELS = {
+  1: {
+    playerSpeed: 5,
+    obstacles: [
+      { z: 5, speed: 1.3, width: 3.2, color: '#ff5c7a' },
+      { z: 1, speed: -1.7, width: 3.8, color: '#ffb84d' },
+      { z: -3, speed: 1.9, width: 3.3, color: '#b66dff' },
+    ],
+  },
+  2: {
+    playerSpeed: 6,
+    obstacles: [
+      { z: 5, speed: 2.3, width: 3.5, color: '#ff5c7a' },
+      { z: 2.5, speed: -2.6, width: 3.8, color: '#ffb84d' },
+      { z: 0, speed: 2.9, width: 3.6, color: '#b66dff' },
+      { z: -2.5, speed: -3.1, width: 3.8, color: '#38ff9c' },
+      { z: -5, speed: 3.4, width: 3.5, color: '#ff38e0' },
+    ],
+  },
+}
+
+function Player({ positionRef, resetSignal, speed }) {
   const mesh = useRef()
   const keys = useRef({})
 
@@ -42,8 +58,8 @@ function Player({ positionRef, resetSignal }) {
       z: (keys.current.s || keys.current.arrowdown ? 1 : 0) -
         (keys.current.w || keys.current.arrowup ? 1 : 0),
     }
-    mesh.current.position.x += direction.x * delta * 5
-    mesh.current.position.z += direction.z * delta * 5
+    mesh.current.position.x += direction.x * delta * speed
+    mesh.current.position.z += direction.z * delta * speed
     mesh.current.position.x = Math.max(-5.3, Math.min(5.3, mesh.current.position.x))
     mesh.current.position.z = Math.max(-9, Math.min(9, mesh.current.position.z))
     positionRef.current = [mesh.current.position.x, mesh.current.position.z]
@@ -75,11 +91,18 @@ function Obstacle({ obstacle, index, positionsRef }) {
   )
 }
 
-function Arena({ onDeath, onWin, resetSignal }) {
+function Arena({ levelConfig, onDeath, onWin, resetSignal }) {
+  const { obstacles, playerSpeed } = levelConfig
   const playerPosition = useRef([START[0], START[2]])
-  const obstaclePositions = useRef(OBSTACLES.map((obstacle) => [0, obstacle.z]))
+  const obstaclePositions = useRef(obstacles.map((obstacle) => [0, obstacle.z]))
   const collisionCooldown = useRef(0)
   const won = useRef(false)
+
+  useEffect(() => {
+    obstaclePositions.current = obstacles.map((obstacle) => [0, obstacle.z])
+    playerPosition.current = [START[0], START[2]]
+    won.current = false
+  }, [obstacles, resetSignal])
 
   useFrame((_, delta) => {
     collisionCooldown.current -= delta
@@ -100,16 +123,12 @@ function Arena({ onDeath, onWin, resetSignal }) {
     }
   })
 
-  useEffect(() => {
-    won.current = false
-  }, [resetSignal])
-
   return (
     <>
-      <Player positionRef={playerPosition} resetSignal={resetSignal} />
-      {OBSTACLES.map((obstacle, index) => (
+      <Player positionRef={playerPosition} resetSignal={resetSignal} speed={playerSpeed} />
+      {obstacles.map((obstacle, index) => (
         <Obstacle
-          key={obstacle.z}
+          key={`${obstacle.z}-${index}`}
           obstacle={obstacle}
           index={index}
           positionsRef={obstaclePositions}
@@ -134,6 +153,7 @@ function Marker({ position, color, label }) {
 }
 
 function App() {
+  const [level, setLevel] = useState(1)
   const [deaths, setDeaths] = useState(0)
   const [won, setWon] = useState(false)
   const [resetSignal, setResetSignal] = useState(0)
@@ -143,15 +163,27 @@ function App() {
     setResetSignal((value) => value + 1)
   }
 
+  const increaseLevel = () => {
+    setLevel((current) => (current < 2 ? current + 1 : 1))
+    setWon(false)
+    setResetSignal((value) => value + 1)
+  }
+
+  const levelConfig = LEVELS[level]
+
   return (
     <main className="game">
       <header className="hud">
         <div>
-          <p className="eyebrow">MISION CONDOR</p>
+          <p className="eyebrow">MISION CONDOR · NIVEL {level}</p>
           <h1>De A a B</h1>
         </div>
         <div className="stats">
+          <span>Nivel <strong className="level-badge">{level}</strong></span>
           <span>Muertes <strong>{deaths}</strong></span>
+          <button onClick={increaseLevel} className="btn-level">
+            Aumentar nivel
+          </button>
           <button onClick={restart}>Reiniciar</button>
         </div>
       </header>
@@ -162,6 +194,7 @@ function App() {
           <ambientLight intensity={1.3} />
           <directionalLight position={[4, 10, 5]} intensity={3} castShadow />
           <Arena
+            levelConfig={levelConfig}
             onDeath={() => {
               setDeaths((value) => value + 1)
               setResetSignal((value) => value + 1)
@@ -181,8 +214,15 @@ function App() {
         {won && (
           <div className="victory">
             <span>¡LLEGASTE!</span>
-            <p>La misión fue completada</p>
-            <button onClick={restart}>Jugar de nuevo</button>
+            <p>Nivel {level} completado</p>
+            <div className="victory-actions">
+              {level < 2 && (
+                <button onClick={increaseLevel} className="btn-level">
+                  Aumentar nivel
+                </button>
+              )}
+              <button onClick={restart}>Jugar de nuevo</button>
+            </div>
           </div>
         )}
       </section>
