@@ -1,0 +1,334 @@
+GUION PARA EL VIDEO - MISION CONDOR
+===================================
+
+Duracion sugerida: 2 a 3 minutos
+Orden de participacion: Sebas, Shirley y Milenka
+
+La idea es que cada integrante hable de corrido y termine toda su parte antes
+de pasarle la palabra al siguiente. Pueden mostrar el juego y el codigo mientras
+leen o explican cada bloque.
+
+
+1. PARTE COMPLETA DE SEBAS
+---------------------------
+
+SEBAS:
+
+Hola, soy Sebas y voy a explicar la base de nuestro proyecto: la escena 3D,
+el jugador, el movimiento con teclado y los obstaculos.
+
+Nuestro juego se llama "Mision Condor: De A a B". El objetivo es controlar un
+cubo azul desde el punto A hasta el punto B, evitando paredes que se mueven.
+Si el jugador choca, pierde una vida y vuelve al inicio. Si llega al punto B,
+gana.
+
+Primero voy a mostrar la parte superior de App.jsx. Importamos las herramientas
+principales:
+
+    import { Canvas, useFrame } from '@react-three/fiber'
+    import { OrbitControls, Text } from '@react-three/drei'
+
+Canvas crea la escena 3D. useFrame permite ejecutar codigo en cada cuadro de la
+animacion. OrbitControls permite mover la camara con el mouse y Text muestra
+las letras A y B dentro de la escena.
+
+Tambien definimos la posicion inicial y la meta:
+
+    const START = [0, 0.65, 8]
+    const GOAL_Z = -8
+
+START representa el punto A. GOAL_Z indica la posicion de la meta B.
+En la escena 3D usamos tres coordenadas: X para izquierda y derecha, Y para
+altura y Z para avanzar o retroceder.
+
+Ahora muestro la funcion Player:
+
+    function Player({ positionRef, resetSignal, speed, paused }) {
+
+Esta funcion representa el cubo azul y recibe datos para compartir su posicion,
+reiniciarse, controlar la velocidad y pausarse cuando termina la partida.
+
+Dentro usamos referencias:
+
+    const mesh = useRef()
+    const keys = useRef({})
+
+mesh guarda una referencia al objeto 3D para poder modificar su posicion.
+keys guarda las teclas que estan presionadas.
+
+Con useEffect agregamos los eventos keydown y keyup. Cuando se presiona una
+tecla, la guardamos como verdadera; cuando se suelta, la guardamos como falsa.
+Asi sabemos si el jugador esta manteniendo presionada W, A, S, D o alguna
+flecha.
+
+La parte principal del movimiento es:
+
+    useFrame((_, delta) => {
+
+useFrame se ejecuta en cada cuadro. Primero calculamos la direccion. D o la
+flecha derecha dan un valor positivo en X. A o la flecha izquierda dan un
+valor negativo. W y la flecha arriba avanzan hacia la meta, y S o la flecha
+abajo hacen retroceder al jugador.
+
+Despues actualizamos la posicion:
+
+    mesh.current.position.x += direction.x * delta * speed
+    mesh.current.position.z += direction.z * delta * speed
+
+delta representa el tiempo entre cuadros y speed es la velocidad del jugador.
+Usar delta hace que el movimiento sea mas estable en distintas computadoras.
+Tambien limitamos X y Z para que el cubo no se salga de la pista.
+
+El cubo se crea con:
+
+    <boxGeometry args={[0.8, 0.8, 0.8]} />
+
+y se le asigna un material celeste. La propiedad castShadow permite que
+proyecte sombra.
+
+Ahora muestro la funcion Obstacle:
+
+    function Obstacle({ obstacle, index, positionsRef }) {
+
+Obstacle es un componente reutilizable para crear las paredes. No escribimos
+una funcion distinta para cada pared. Usamos el mismo componente y le pasamos
+datos diferentes, como posicion, velocidad, ancho y color.
+
+Las paredes se mueven en useFrame usando Math.sin:
+
+    const x = Math.sin(clock.getElapsedTime() * obstacle.speed + index)
+      * obstacle.width
+
+Math.sin genera un movimiento de ida y vuelta. Por eso cada pared se desplaza
+de izquierda a derecha continuamente. speed controla la rapidez y width
+controla la distancia del recorrido.
+
+Las paredes se generan con map:
+
+    {obstacles.map((obstacle, index) => (
+      <Obstacle ... />
+    ))}
+
+map recorre la lista de obstaculos y crea un componente por cada elemento.
+Asi podemos tener tres paredes en un nivel y mas paredes en otro sin duplicar
+codigo.
+
+La funcion Arena une al jugador y los obstaculos. Tambien revisa las
+colisiones. Para detectar un choque, compara la distancia entre el jugador y
+cada pared. Si la distancia en X y en Z es menor que ciertos valores, se
+considera que hubo una colision y se llama a onDeath.
+
+Finalmente, en App usamos Canvas:
+
+    <Canvas shadows camera={{ position: [11, 13, 14], fov: 45 }}>
+
+Dentro de Canvas colocamos las luces, Arena, los puntos A y B, el piso, la
+cuadricula y los controles de camara. React Three Fiber permite escribir esos
+objetos 3D como componentes de React.
+
+DEMOSTRACION:
+Ahora muestro que el cubo se mueve con WASD o las flechas y que las paredes se
+mueven automaticamente.
+
+Con esto termino mi parte y le paso la palabra a Shirley, que va a explicar
+el sistema de vidas, los corazones y el reinicio despues de un choque.
+
+
+2. PARTE COMPLETA DE SHIRLEY
+-----------------------------
+
+SHIRLEY:
+
+Hola, soy Shirley y voy a explicar el sistema de vidas, los corazones, el
+contador de muertes y el reinicio del jugador.
+
+La cantidad maxima de vidas se define en App.jsx:
+
+    const MAX_LIVES = 3
+
+Esto significa que cada partida comienza con tres vidas.
+
+Despues usamos estados de React:
+
+    const [lives, setLives] = useState(MAX_LIVES)
+    const [deaths, setDeaths] = useState(0)
+    const [gameOver, setGameOver] = useState(false)
+
+lives guarda las vidas actuales. deaths guarda la cantidad total de choques.
+gameOver indica si ya se terminaron todas las vidas.
+
+Los corazones se dibujan recorriendo tres posiciones:
+
+    Array.from({ length: MAX_LIVES }).map(...)
+
+Si el indice es menor que lives, el corazon aparece activo. Si no, aparece
+apagado. De esta forma el jugador puede ver cuantas vidas le quedan.
+
+Los colores de los corazones estan en App.css:
+
+    .life--active { color: #ff4d6d; }
+    .life--lost { color: #2d3a52; opacity: 0.5; }
+
+La funcion mas importante de mi parte es handleDeath:
+
+    const handleDeath = () => {
+      setDeaths((value) => value + 1)
+      setLives((previousLives) => {
+        const nextLives = previousLives - 1
+
+        if (nextLives <= 0) {
+          setGameOver(true)
+          return 0
+        }
+
+        setResetSignal((value) => value + 1)
+        return nextLives
+      })
+    }
+
+Esta funcion se ejecuta cuando Arena detecta que el jugador toco una pared.
+Primero aumenta el contador de muertes y despues resta una vida.
+
+Si todavia quedan vidas, se aumenta resetSignal. Player recibe esa señal y
+ejecuta:
+
+    mesh.current.position.set(...START)
+
+Por eso el cubo vuelve al punto A despues de cada choque.
+
+Si nextLives llega a cero, se activa gameOver. En ese caso ya no se manda la
+señal de reinicio y aparece el mensaje GAME OVER.
+
+Arena recibe esta propiedad:
+
+    paused={gameOver || won}
+
+Esto pausa el movimiento del jugador y la deteccion de colisiones cuando se
+terminan las vidas o cuando el jugador gana. Asi no se siguen sumando muertes
+despues de terminar la partida.
+
+La funcion restart permite volver a jugar:
+
+    const restart = () => {
+      setWon(false)
+      setGameOver(false)
+      setLives(MAX_LIVES)
+      setDeaths(0)
+      setResetSignal((value) => value + 1)
+    }
+
+Esta funcion restaura las tres vidas, pone el contador en cero, oculta GAME
+OVER y devuelve al jugador al punto A.
+
+El boton de reinicio llama a esta funcion:
+
+    <button onClick={restart}>Intentar de nuevo</button>
+
+DEMOSTRACION:
+Ahora voy a provocar un choque. Se puede ver que el contador de muertes
+aumenta, un corazon se apaga y el cubo vuelve al punto A. Repito el choque
+hasta perder las tres vidas. Cuando llegamos a cero aparece GAME OVER y el
+juego queda pausado. Despues presiono Intentar de nuevo y la partida vuelve a
+comenzar con tres corazones.
+
+Con esto termino mi parte y le paso la palabra a Milenka, que va a explicar
+los niveles, el aumento de dificultad y el reinicio al cambiar de nivel.
+
+
+3. PARTE COMPLETA DE MILENKA
+-----------------------------
+
+MILENKA:
+
+Hola, soy Milenka y voy a explicar el sistema de niveles y como aumenta la
+dificultad del juego.
+
+Los niveles estan definidos en la constante LEVELS:
+
+    const LEVELS = {
+      1: { ... },
+      2: { ... },
+    }
+
+Cada nivel contiene la velocidad del jugador y una lista de obstaculos.
+
+En el nivel 1 hay tres paredes y una velocidad normal. En el nivel 2 hay mas
+paredes, se mueven mas rapido y estan ubicadas en distintas posiciones. Por
+eso el segundo nivel es mas dificil.
+
+El nivel actual se guarda en este estado:
+
+    const [level, setLevel] = useState(1)
+
+Al comenzar, el juego esta en el nivel 1.
+
+Para obtener la configuracion del nivel actual usamos:
+
+    const levelConfig = LEVELS[level]
+
+Esa configuracion se envia al componente Arena:
+
+    <Arena levelConfig={levelConfig} ... />
+
+Arena recibe los obstaculos y la velocidad:
+
+    const { obstacles, playerSpeed } = levelConfig
+
+Asi Player recibe la velocidad del nivel y Obstacle recibe la lista de paredes
+que tiene que crear.
+
+La funcion para cambiar de nivel es:
+
+    const increaseLevel = () => {
+      setLevel((current) => (current < 2 ? current + 1 : 1))
+      setWon(false)
+      setGameOver(false)
+      setLives(MAX_LIVES)
+      setResetSignal((value) => value + 1)
+    }
+
+Si estamos en el nivel 1, pasamos al nivel 2. Si estamos en el nivel 2,
+volvemos al nivel 1. Tambien se reinician la victoria, el GAME OVER, las
+vidas y la posicion del jugador para comenzar el nuevo nivel correctamente.
+
+El boton que ejecuta esta funcion es:
+
+    <button onClick={increaseLevel} className="btn-level">
+      Aumentar nivel
+    </button>
+
+El numero del nivel aparece en el titulo y en el marcador. Cuando completamos
+un nivel aparece el mensaje de victoria. Si todavia estamos en el nivel 1,
+tambien aparece un boton para pasar al nivel 2.
+
+DEMOSTRACION:
+Ahora muestro el nivel 1 y presiono Aumentar nivel. Se puede ver que cambia
+el numero del nivel, aparecen mas paredes y se mueven mas rapido. Tambien se
+reinician las vidas y el jugador vuelve al punto A para empezar el nuevo nivel.
+
+Para cerrar, nuestro proyecto esta organizado en componentes reutilizables:
+Player controla el cubo, Obstacle crea las paredes, Arena contiene las reglas
+y Marker crea los puntos A y B.
+
+Usamos React para manejar los estados, React Three Fiber para la escena 3D y
+Drei para los controles de camara y el texto 3D.
+
+El repositorio tiene las ramas Sebas, Shirley, Milenka y main. El codigo
+completo esta disponible en:
+
+    https://github.com/xXSCLAXx/juego-3d-cubo
+
+Gracias por ver nuestra presentacion.
+
+
+4. ORDEN RECOMENDADO PARA LA GRABACION
+---------------------------------------
+
+1. Sebas presenta el juego, muestra el codigo base y mueve el jugador.
+2. Sebas termina su explicacion y le pasa la palabra a Shirley.
+3. Shirley muestra un choque, los corazones, el contador y GAME OVER.
+4. Shirley reinicia la partida y le pasa la palabra a Milenka.
+5. Milenka muestra el nivel 1, aumenta al nivel 2 y explica los cambios.
+6. Milenka muestra GitHub con las ramas y el commit final.
+7. Terminan mostrando el juego funcionando.
+
