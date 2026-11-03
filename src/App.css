@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap');
+
+.game {
+  min-height: 100vh;
+  padding: 28px clamp(18px, 5vw, 72px);
+  box-sizing: border-box;
+  background: #0b1020;
+  color: #e8efff;
+  font-family: 'DM Mono', monospace;
+}
+
+.hud, footer {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.eyebrow {
+  color: #5de1b0;
+  font-size: 11px;
+  letter-spacing: 3px;
+  margin: 0 0 4px;
+}
+
+h1 {
+  font: 700 clamp(28px, 5vw, 52px) 'Space Grotesk', sans-serif;
+  margin: 0;
+  letter-spacing: -2px;
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.stats span {
+  color: #91a1c2;
+  font-size: 13px;
+}
+
+.stats strong {
+  color: #ff6d8d;
+  font-size: 24px;
+  margin-left: 6px;
+}
+
+button {
+  border: 1px solid #5de1b0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: #0b1020;
+  background: #5de1b0;
+  font: 500 12px 'DM Mono', monospace;
+  cursor: pointer;
+}
+
+button:hover { background: #8af3cb; }
+
+.scene-wrap {
+  position: relative;
+  max-width: 1180px;
+  height: min(68vh, 650px);
+  min-height: 430px;
+  margin: 26px auto 18px;
+  overflow: hidden;
+  border: 1px solid #293b60;
+  border-radius: 14px;
+  box-shadow: 0 20px 70px #03050d;
+}
+
+.scene-wrap canvas { display: block; }
+
+.victory {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  min-width: 250px;
+  padding: 24px;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  border: 1px solid #5de1b0;
+  border-radius: 12px;
+  background: rgba(11, 16, 32, .94);
+  box-shadow: 0 0 45px rgba(93, 225, 176, .25);
+}
+
+.victory span {
+  color: #5de1b0;
+  font: 700 28px 'Space Grotesk', sans-serif;
+}
+
+.victory p { color: #aab9d5; margin: 8px 0 18px; font-size: 12px; }
+
+footer {
+  color: #7181a1;
+  font-size: 11px;
+}
+
+footer b { color: #d7e3ff; }
+
+@media (max-width: 600px) {
+  .hud { align-items: flex-start; }
+  .stats { flex-direction: column; align-items: flex-end; gap: 8px; }
+  .scene-wrap { min-height: 390px; height: 62vh; }
+  footer { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
