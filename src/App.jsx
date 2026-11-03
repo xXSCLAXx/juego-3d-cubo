@@ -75,13 +75,14 @@ function Obstacle({ obstacle, index, positionsRef }) {
   )
 }
 
-function Arena({ onDeath, onWin, resetSignal }) {
+function Arena({ onDeath, onWin, resetSignal, paused }) {
   const playerPosition = useRef([START[0], START[2]])
   const obstaclePositions = useRef(OBSTACLES.map((obstacle) => [0, obstacle.z]))
   const collisionCooldown = useRef(0)
   const won = useRef(false)
 
   useFrame((_, delta) => {
+    if (paused) return
     collisionCooldown.current -= delta
     const [playerX, playerZ] = playerPosition.current
 
@@ -133,14 +134,34 @@ function Marker({ position, color, label }) {
   )
 }
 
+const MAX_LIVES = 3
+
 function App() {
+  const [lives, setLives] = useState(MAX_LIVES)
   const [deaths, setDeaths] = useState(0)
   const [won, setWon] = useState(false)
+  const [gameOver, setGameOver] = useState(false)
   const [resetSignal, setResetSignal] = useState(0)
 
   const restart = () => {
     setWon(false)
+    setGameOver(false)
+    setLives(MAX_LIVES)
+    setDeaths(0)
     setResetSignal((value) => value + 1)
+  }
+
+  const handleDeath = () => {
+    setDeaths((value) => value + 1)
+    setLives((prev) => {
+      const next = prev - 1
+      if (next <= 0) {
+        setGameOver(true)
+        return 0
+      }
+      setResetSignal((value) => value + 1)
+      return next
+    })
   }
 
   return (
@@ -151,6 +172,11 @@ function App() {
           <h1>De A a B</h1>
         </div>
         <div className="stats">
+          <span className="lives-display">
+            {Array.from({ length: MAX_LIVES }).map((_, i) => (
+              <span key={i} className={i < lives ? 'life life--active' : 'life life--lost'}>♥</span>
+            ))}
+          </span>
           <span>Muertes <strong>{deaths}</strong></span>
           <button onClick={restart}>Reiniciar</button>
         </div>
@@ -162,12 +188,10 @@ function App() {
           <ambientLight intensity={1.3} />
           <directionalLight position={[4, 10, 5]} intensity={3} castShadow />
           <Arena
-            onDeath={() => {
-              setDeaths((value) => value + 1)
-              setResetSignal((value) => value + 1)
-            }}
+            onDeath={handleDeath}
             onWin={() => setWon(true)}
             resetSignal={resetSignal}
+            paused={gameOver || won}
           />
           <Marker position={[0, 0.08, 8]} color="#27d17f" label="A" />
           <Marker position={[0, 0.08, GOAL_Z]} color="#f4d35e" label="B" />
@@ -183,6 +207,13 @@ function App() {
             <span>¡LLEGASTE!</span>
             <p>La misión fue completada</p>
             <button onClick={restart}>Jugar de nuevo</button>
+          </div>
+        )}
+        {gameOver && (
+          <div className="game-over">
+            <span>GAME OVER</span>
+            <p>Sin vidas restantes · Muertes: {deaths}</p>
+            <button onClick={restart}>Intentar de nuevo</button>
           </div>
         )}
       </section>

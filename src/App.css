@@ -74,17 +74,39 @@ button:hover { background: #8af3cb; }
 
 .scene-wrap canvas { display: block; }
 
-.victory {
+.lives-display {
+  display: flex;
+  gap: 4px;
+}
+
+.life {
+  font-size: 22px;
+  line-height: 1;
+  transition: opacity 0.3s;
+}
+
+.life--active { color: #ff4d6d; }
+.life--lost   { color: #2d3a52; opacity: 0.5; }
+
+.victory, .game-over {
   position: absolute;
   inset: 50% auto auto 50%;
   min-width: 250px;
   padding: 24px;
   text-align: center;
   transform: translate(-50%, -50%);
-  border: 1px solid #5de1b0;
   border-radius: 12px;
   background: rgba(11, 16, 32, .94);
+}
+
+.victory {
+  border: 1px solid #5de1b0;
   box-shadow: 0 0 45px rgba(93, 225, 176, .25);
+}
+
+.game-over {
+  border: 1px solid #ff4d6d;
+  box-shadow: 0 0 45px rgba(255, 77, 109, .25);
 }
 
 .victory span {
@@ -92,7 +114,12 @@ button:hover { background: #8af3cb; }
   font: 700 28px 'Space Grotesk', sans-serif;
 }
 
-.victory p { color: #aab9d5; margin: 8px 0 18px; font-size: 12px; }
+.game-over span {
+  color: #ff4d6d;
+  font: 700 28px 'Space Grotesk', sans-serif;
+}
+
+.victory p, .game-over p { color: #aab9d5; margin: 8px 0 18px; font-size: 12px; }
 
 footer {
   color: #7181a1;
